@@ -1,14 +1,10 @@
-import { useMemo, useRef, useState } from 'react'
-import LiquidGlass from 'liquid-glass-react'
+import { memo, useMemo, useRef, useState } from 'react'
+import { GLASS, GLASS_HOVER } from './Glass'
 import { splitSentences } from '../lib/nlp'
 import { ask, embedBatch, getEmbedder, getQA, type AnswerResult } from '../lib/ai'
 import type { Doc } from '../lib/store'
 
-interface Turn {
-  q: string
-  a: AnswerResult | null
-  citedSentence?: string
-}
+interface Turn { q: string; a: AnswerResult | null; citedSentence?: string }
 
 export default function AskView({ doc }: { doc: Doc }) {
   const [turns, setTurns] = useState<Turn[]>([])
@@ -31,63 +27,57 @@ export default function AskView({ doc }: { doc: Doc }) {
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
     } catch (e) {
       console.error(e)
-      setError('AI models could not load. Check your internet connection on first use — after that they run offline.')
+      setError('AI models could not load. Check your internet connection on first use.')
     } finally { setBusy(false) }
   }
 
   return (
     <div className="flex flex-col">
       <p className="mb-4 text-sm text-slate-300">
-        Ask anything about <span className="font-semibold text-white">{doc.title}</span>. A sentence-embedding model finds the most relevant passages, then a QA neural net extracts the exact answer.
+        Ask anything about <span className="font-semibold text-white">{doc.title}</span>.
       </p>
 
       <div className="space-y-4">
         {turns.length === 0 && (
-          <LiquidGlass displacementScale={30} blurAmount={0.03} saturation={110} aberrationIntensity={0.6} elasticity={0.15} cornerRadius={20} className="rounded-2xl">
-            <div className="p-5 rounded-2xl">
-              <p className="font-medium text-sm text-white">Try asking:</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {suggestQuestions(doc).map((q) => (
-                  <LiquidGlass key={q} displacementScale={25} blurAmount={0.025} saturation={110} aberrationIntensity={0.5} elasticity={0.25} cornerRadius={999} className="rounded-full" onClick={() => send(q)}>
-                    <span className="inline-flex items-center rounded-full px-3 py-1.5 text-xs text-slate-300 cursor-pointer hover:text-white transition">{q}</span>
-                  </LiquidGlass>
-                ))}
-              </div>
+          <div className={`${GLASS} rounded-2xl p-5`}>
+            <p className="font-medium text-sm text-white">Try asking:</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {suggestQuestions(doc).map((q) => (
+                <button key={q} onClick={() => send(q)}
+                  className={`rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-xs text-slate-300
+                    backdrop-blur-xl hover:bg-white/[0.08] hover:text-white transition-all duration-200`}>
+                  {q}
+                </button>
+              ))}
             </div>
-          </LiquidGlass>
+          </div>
         )}
 
         {turns.map((t, i) => (
-          <div key={i} className="space-y-2.5 fade-up" style={{ animationDelay: `${i * 0.05}s` }}>
-            {/* Question */}
+          <div key={i} className="space-y-2 fade-up" style={{ animationDelay: `${i * 0.03}s` }}>
+            {/* Question bubble */}
             <div className="flex justify-end">
-              <LiquidGlass displacementScale={45} blurAmount={0.04} saturation={140} aberrationIntensity={1.5} elasticity={0.2} cornerRadius={20} className="rounded-2xl rounded-br-md max-w-[80%]">
-                <div className="rounded-2xl rounded-br-md px-4 py-2.5">
-                  <p className="text-sm text-white">{t.q}</p>
-                </div>
-              </LiquidGlass>
+              <div className="max-w-[80%] rounded-2xl rounded-br-md bg-indigo-500/20 border border-indigo-500/20 px-4 py-2.5 backdrop-blur-xl">
+                <p className="text-sm text-white">{t.q}</p>
+              </div>
             </div>
-            {/* Answer */}
+            {/* Answer bubble */}
             <div className="flex justify-start">
-              <LiquidGlass displacementScale={40} blurAmount={0.035} saturation={125} aberrationIntensity={1} elasticity={0.2} cornerRadius={20} className="rounded-2xl rounded-bl-md max-w-[85%]">
-                <div className="rounded-2xl rounded-bl-md px-4 py-3">
-                  {t.a ? (
-                    <>
-                      <p className="text-sm leading-relaxed text-slate-100">{t.a.answer}</p>
-                      <div className="mt-2.5 flex items-center gap-2 text-[11px] text-slate-400">
-                        <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-emerald-400 border border-emerald-500/20">
-                          {(t.a.score * 100).toFixed(0)}% confidence
-                        </span>
-                        {t.citedSentence && <span className="truncate italic">"{t.citedSentence}"</span>}
-                      </div>
-                    </>
-                  ) : (
-                    <p className="text-sm text-slate-400">
-                      I couldn't find that in this document. Try rephrasing.
-                    </p>
-                  )}
-                </div>
-              </LiquidGlass>
+              <div className={`${GLASS} max-w-[85%] rounded-2xl rounded-bl-md px-4 py-3`}>
+                {t.a ? (
+                  <>
+                    <p className="text-sm leading-relaxed text-slate-100">{t.a.answer}</p>
+                    <div className="mt-2.5 flex items-center gap-2 text-[11px] text-slate-400">
+                      <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-emerald-400 border border-emerald-500/20">
+                        {(t.a.score * 100).toFixed(0)}%
+                      </span>
+                      {t.citedSentence && <span className="truncate italic">"{t.citedSentence}"</span>}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-slate-400">Couldn't find that. Try rephrasing.</p>
+                )}
+              </div>
             </div>
           </div>
         ))}
@@ -99,35 +89,25 @@ export default function AskView({ doc }: { doc: Doc }) {
       )}
 
       {/* Input */}
-      <form
-        className="sticky bottom-0 mt-6 flex gap-2 bg-gradient-to-t from-black/60 via-black/30 to-transparent pt-6 pb-2"
-        onSubmit={(e) => { e.preventDefault(); send(input) }}
-      >
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={busy ? 'Thinking…' : 'Ask a question about this text…'}
-          disabled={busy}
-          className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white placeholder:text-slate-400 backdrop-blur-xl focus:border-indigo-400/50 focus:outline-none focus:ring-2 focus:ring-indigo-400/20 transition disabled:opacity-50"
-        />
-        <LiquidGlass displacementScale={50} blurAmount={0.04} saturation={150} aberrationIntensity={2} elasticity={0.35} cornerRadius={16} className="rounded-2xl" onClick={() => send(input)}>
-          <span className={`flex items-center rounded-2xl px-5 py-3.5 text-sm font-semibold cursor-pointer transition ${busy || !input.trim() ? 'text-slate-500' : 'text-white'}`}>
-            {busy ? (
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" style={{ animationDelay: '0.2s' }} />
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" style={{ animationDelay: '0.4s' }} />
-              </span>
-            ) : 'Ask →'}
-          </span>
-        </LiquidGlass>
+      <form className="sticky bottom-0 mt-6 flex gap-2 pt-6 pb-2"
+        onSubmit={(e) => { e.preventDefault(); send(input) }}>
+        <input value={input} onChange={(e) => setInput(e.target.value)}
+          placeholder={busy ? 'Thinking…' : 'Ask a question…'} disabled={busy}
+          className="flex-1 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-3.5 text-sm text-white
+            placeholder:text-slate-400 backdrop-blur-xl focus:border-indigo-400/50 focus:outline-none
+            focus:ring-2 focus:ring-indigo-400/20 transition disabled:opacity-50" />
+        <button type="submit" disabled={busy || !input.trim()}
+          className="rounded-xl bg-indigo-500/20 border border-indigo-500/20 px-5 py-3.5 text-sm font-semibold text-white
+            hover:bg-indigo-500/30 active:scale-[0.98] transition-all duration-200
+            disabled:opacity-40 disabled:cursor-not-allowed">
+          {busy ? '…' : 'Ask →'}
+        </button>
       </form>
     </div>
   )
 }
 
 function suggestQuestions(doc: Doc): string[] {
-  const qs = doc.cards.filter((c) => c.type === 'definition').slice(0, 3).map((c) => c.question.replace(/\?$/, '?'))
-  if (qs.length > 0) return qs
-  return ['What is the main idea?', 'Summarize the key points']
+  const qs = doc.cards.filter((c) => c.type === 'definition').slice(0, 3).map((c) => c.question)
+  return qs.length > 0 ? qs : ['What is the main idea?', 'Summarize the key points']
 }

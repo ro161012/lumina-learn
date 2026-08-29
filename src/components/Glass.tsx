@@ -1,79 +1,74 @@
 /**
- * Reusable glass surface components powered by liquid-glass-react.
- * Provides Card, Panel, Button, and Input variants for consistent
- * liquid glass styling throughout the app.
+ * Optimized glass component system.
+ *
+ * Strategy:
+ *  - CSS-only backdrop-filter glassmorphism for ~90% of surfaces (fast, zero GPU overhead)
+ *  - LiquidGlass (WebGL) reserved for 2-3 hero surfaces only (sidebar, flashcard, main panel)
+ *
+ * Each LiquidGlass instance creates a WebGL canvas — having 5+ on screen at once
+ * tanks FPS. CSS backdrop-filter gives 95% of the look at 1% of the cost.
  */
 
-import { type ReactNode, useRef } from 'react'
+import { type ReactNode, memo } from 'react'
 import LiquidGlass from 'liquid-glass-react'
 
-// ─── Card: a floating glass panel ────────────────────────────────────────────
-interface CardProps {
+// ─── CSS-only glass surfaces (no WebGL, zero overhead) ─────────────────────
+
+/** Base CSS glass class — used everywhere for instant, smooth rendering */
+export const GLASS = `
+  border border-white/[0.08]
+  bg-white/[0.04]
+  backdrop-blur-xl
+  shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_32px_rgba(0,0,0,0.25)]
+`.replace(/\n\s*/g, ' ').trim()
+
+export const GLASS_HOVER = `
+  ${GLASS}
+  transition-all duration-300 ease-out
+  hover:bg-white/[0.07]
+  hover:border-white/[0.12]
+  hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_12px_40px_rgba(0,0,0,0.3),0_0_30px_rgba(99,102,241,0.06)]
+`.replace(/\n\s*/g, ' ').trim()
+
+export const GLASS_ACTIVE = `
+  ${GLASS}
+  bg-indigo-500/15
+  border-indigo-500/20
+  shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_20px_rgba(99,102,241,0.12)]
+`.replace(/\n\s*/g, ' ').trim()
+
+// ─── GlassCard: CSS-only for small/numerous items ──────────────────────────
+
+interface GlassCardProps {
   children: ReactNode
   className?: string
   padding?: string
   onClick?: () => void
-  /** Subtle (default) or intense refraction */
-  intensity?: 'subtle' | 'medium' | 'strong'
-  cornerRadius?: number
+  active?: boolean
 }
 
-const INTENSITY = {
-  subtle: { displacementScale: 40, blurAmount: 0.04, aberrationIntensity: 1 },
-  medium: { displacementScale: 60, blurAmount: 0.06, aberrationIntensity: 2 },
-  strong: { displacementScale: 80, blurAmount: 0.08, aberrationIntensity: 3 },
-} as const
-
-export function GlassCard({
+export const GlassCard = memo(function GlassCard({
   children,
   className = '',
   padding,
   onClick,
-  intensity = 'medium',
-  cornerRadius = 28,
-}: CardProps) {
+  active,
+}: GlassCardProps) {
   return (
-    <LiquidGlass
-      displacementScale={INTENSITY[intensity].displacementScale}
-      blurAmount={INTENSITY[intensity].blurAmount}
-      saturation={130}
-      aberrationIntensity={INTENSITY[intensity].aberrationIntensity}
-      elasticity={0.2}
-      cornerRadius={cornerRadius}
-      className={`rounded-[28px] ${className}`}
-      padding={padding}
+    <div
+      className={`${active ? GLASS_ACTIVE : GLASS_HOVER} rounded-2xl ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      style={padding ? { padding } : undefined}
       onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
     >
       {children}
-    </LiquidGlass>
+    </div>
   )
-}
+})
 
-// ─── Panel: a larger surface (sidebar, main background) ─────────────────────
-interface PanelProps {
-  children: ReactNode
-  className?: string
-  padding?: string
-}
+// ─── GlassButton: small interactive elements ────────────────────────────────
 
-export function GlassPanel({ children, className = '', padding }: PanelProps) {
-  return (
-    <LiquidGlass
-      displacementScale={35}
-      blurAmount={0.03}
-      saturation={120}
-      aberrationIntensity={0.8}
-      elasticity={0.15}
-      cornerRadius={0}
-      className={className}
-      padding={padding}
-    >
-      {children}
-    </LiquidGlass>
-  )
-}
-
-// ─── Button: a small interactive glass element ──────────────────────────────
 interface GlassButtonProps {
   children: ReactNode
   className?: string
@@ -81,25 +76,24 @@ interface GlassButtonProps {
   active?: boolean
 }
 
-export function GlassButton({ children, className = '', onClick, active }: GlassButtonProps) {
+export const GlassButton = memo(function GlassButton({
+  children,
+  className = '',
+  onClick,
+  active,
+}: GlassButtonProps) {
   return (
-    <LiquidGlass
-      displacementScale={active ? 55 : 40}
-      blurAmount={0.05}
-      saturation={active ? 160 : 130}
-      aberrationIntensity={active ? 2.5 : 1}
-      elasticity={0.35}
-      cornerRadius={16}
-      className={`rounded-2xl ${className}`}
-      padding="6px 14px"
+    <button
+      className={`${active ? GLASS_ACTIVE : GLASS_HOVER} rounded-xl px-4 py-2 text-sm font-semibold text-white ${className}`}
       onClick={onClick}
     >
       {children}
-    </LiquidGlass>
+    </button>
   )
-}
+})
 
-// ─── Input: glass-styled text field ─────────────────────────────────────────
+// ─── GlassInput: text fields ───────────────────────────────────────────────
+
 interface GlassInputProps {
   value: string
   onChange: (v: string) => void
@@ -111,7 +105,7 @@ interface GlassInputProps {
   name?: string
 }
 
-export function GlassInput({
+export const GlassInput = memo(function GlassInput({
   value,
   onChange,
   placeholder,
@@ -121,9 +115,9 @@ export function GlassInput({
   required,
   name,
 }: GlassInputProps) {
-  const isTextArea = rows !== undefined
+  const cls = `w-full rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm text-slate-100 placeholder:text-slate-400 backdrop-blur-xl focus:border-indigo-400/50 focus:outline-none focus:ring-2 focus:ring-indigo-400/20 transition ${className}`
 
-  if (isTextArea) {
+  if (rows !== undefined) {
     return (
       <textarea
         name={name}
@@ -133,7 +127,7 @@ export function GlassInput({
         rows={rows}
         disabled={disabled}
         required={required}
-        className={`w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm leading-relaxed text-slate-100 placeholder:text-slate-400 backdrop-blur-xl focus:border-indigo-400/60 focus:outline-none focus:ring-2 focus:ring-indigo-400/20 transition ${className}`}
+        className={`${cls} leading-relaxed`}
       />
     )
   }
@@ -146,12 +140,38 @@ export function GlassInput({
       placeholder={placeholder}
       disabled={disabled}
       required={required}
-      className={`w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-400 backdrop-blur-xl focus:border-indigo-400/60 focus:outline-none focus:ring-2 focus:ring-indigo-400/20 transition ${className}`}
+      className={cls}
     />
+  )
+})
+
+// ─── GlassPanel: large surfaces (WebGL — use sparingly) ────────────────────
+
+interface GlassPanelProps {
+  children: ReactNode
+  className?: string
+  padding?: string
+}
+
+export function GlassPanel({ children, className = '', padding }: GlassPanelProps) {
+  return (
+    <LiquidGlass
+      displacementScale={30}
+      blurAmount={0.025}
+      saturation={115}
+      aberrationIntensity={0.6}
+      elasticity={0.12}
+      cornerRadius={0}
+      className={className}
+      padding={padding}
+    >
+      {children}
+    </LiquidGlass>
   )
 }
 
-// ─── Glass surfaces for tab bars ────────────────────────────────────────────
+// ─── GlassTabBar: pill container for tabs ───────────────────────────────────
+
 interface TabBarProps {
   children: ReactNode
   className?: string
@@ -159,41 +179,54 @@ interface TabBarProps {
 
 export function GlassTabBar({ children, className = '' }: TabBarProps) {
   return (
-    <LiquidGlass
-      displacementScale={30}
-      blurAmount={0.025}
-      saturation={110}
-      aberrationIntensity={0.6}
-      elasticity={0.1}
-      cornerRadius={20}
-      className={`rounded-2xl ${className}`}
-    >
+    <div className={`${GLASS} rounded-2xl p-1.5 ${className}`}>
       {children}
-    </LiquidGlass>
+    </div>
   )
 }
 
-// ─── Chip: tiny glass pill (badges, tags) ───────────────────────────────────
+// ─── GlassChip: tiny pill (badges, tags) — CSS only ────────────────────────
+
 interface GlassChipProps {
   children: ReactNode
   color?: string
   className?: string
 }
 
-export function GlassChip({ children, color = 'bg-white/10 text-slate-300', className = '' }: GlassChipProps) {
+export const GlassChip = memo(function GlassChip({
+  children,
+  color = 'bg-white/[0.06] text-slate-300 border-white/[0.08]',
+  className = '',
+}: GlassChipProps) {
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider backdrop-blur-xl ${color} ${className}`}>
+      {children}
+    </span>
+  )
+})
+
+// ─── HeroSurface: the ONE place to use WebGL glass ─────────────────────────
+// Use this for the sidebar and the main flashcard — nothing else.
+
+interface HeroSurfaceProps {
+  children: ReactNode
+  className?: string
+  displacementScale?: number
+  cornerRadius?: number
+}
+
+export function HeroSurface({ children, className = '', displacementScale = 35, cornerRadius = 0 }: HeroSurfaceProps) {
   return (
     <LiquidGlass
-      displacementScale={20}
-      blurAmount={0.02}
-      saturation={100}
-      aberrationIntensity={0.4}
-      elasticity={0.05}
-      cornerRadius={999}
-      className={`rounded-full ${className}`}
+      displacementScale={displacementScale}
+      blurAmount={0.03}
+      saturation={120}
+      aberrationIntensity={0.7}
+      elasticity={0.15}
+      cornerRadius={cornerRadius}
+      className={className}
     >
-      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${color}`}>
-        {children}
-      </span>
+      {children}
     </LiquidGlass>
   )
 }
