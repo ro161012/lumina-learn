@@ -5,45 +5,39 @@ export default {
     extend: {
       colors: {
         ink: {
-          950: 'rgba(7, 10, 19, 0.7)',
-          900: 'rgba(11, 16, 29, 0.7)',
-          850: 'rgba(16, 23, 40, 0.7)',
-          800: 'rgba(20, 28, 49, 0.65)',
-          700: 'rgba(29, 39, 66, 0.6)',
-          600: 'rgba(42, 54, 87, 0.55)',
+          950: '#0e0d0b',
+          900: '#151310',
+          850: '#1b1915',
+          800: '#221f1a',
+          700: '#2e2a23',
+          600: '#3a352c',
+        },
+        paper: {
+          100: '#f2eee5',
+          200: '#e6e0d3',
+          300: '#c9c2b1',
+          400: '#a29b8a',
+          500: '#7a7364',
+          600: '#57524a',
+        },
+        accent: {
+          300: '#f2c669',
+          400: '#e9ae44',
+          500: '#d99a2b',
+          600: '#b57f1f',
         },
       },
       fontFamily: {
-        sans: [
-          'Inter',
-          'ui-sans-serif',
-          'system-ui',
-          '-apple-system',
-          'Segoe UI',
-          'Roboto',
-          'Helvetica Neue',
-          'Arial',
-          'sans-serif',
-        ],
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif'],
+        display: ['"Space Grotesk"', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
-      animation: {
-        float: 'float 6s ease-in-out infinite',
-        glow: 'glow 4s ease-in-out infinite alternate',
-        shimmer: 'shimmer 3s ease-in-out infinite',
+      borderRadius: {
+        xl: '0.75rem',
+        '2xl': '1rem',
       },
-      keyframes: {
-        float: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-8px)' },
-        },
-        glow: {
-          '0%': { boxShadow: '0 0 20px rgba(99, 102, 241, 0.1), inset 0 1px 0 rgba(255,255,255,0.08)' },
-          '100%': { boxShadow: '0 0 40px rgba(139, 92, 246, 0.15), inset 0 1px 0 rgba(255,255,255,0.12)' },
-        },
-        shimmer: {
-          '0%': { backgroundPosition: '-200% 0' },
-          '100%': { backgroundPosition: '200% 0' },
-        },
+      boxShadow: {
+        card: '0 1px 0 0 rgba(255,255,255,0.04) inset, 0 1px 2px rgba(0,0,0,0.4)',
+        lift: '0 1px 0 0 rgba(255,255,255,0.05) inset, 0 4px 16px rgba(0,0,0,0.45)',
       },
     },
   },

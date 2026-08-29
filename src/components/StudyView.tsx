@@ -1,12 +1,16 @@
 import { useState } from 'react'
-import { GLASS, GLASS_ACTIVE, GLASS_HOVER } from './Glass'
+import { GraduationCap, ListChecks, BookOpen, Clock, CheckCircle2 } from 'lucide-react'
+import { cn } from './ui'
 import { deckStats, type Doc, type Profile } from '../lib/store'
 import Flashcard from './Flashcard'
 import Quiz from './Quiz'
 
 interface Props {
-  doc: Doc; docs: Doc[]; setDocs: React.Dispatch<React.SetStateAction<Doc[]>>
-  profile: Profile; setProfile: React.Dispatch<React.SetStateAction<Profile>>
+  doc: Doc
+  docs: Doc[]
+  setDocs: React.Dispatch<React.SetStateAction<Doc[]>>
+  profile: Profile
+  setProfile: React.Dispatch<React.SetStateAction<Profile>>
 }
 
 export default function StudyView({ doc, docs, setDocs, profile, setProfile }: Props) {
@@ -16,38 +20,47 @@ export default function StudyView({ doc, docs, setDocs, profile, setProfile }: P
   return (
     <div>
       {/* Mode toggle + stats */}
-      <div className="mb-6 flex flex-wrap items-center gap-3">
-        <div className={`${GLASS} rounded-xl p-1 flex gap-0.5`}>
-          <button onClick={() => setMode('cards')}
-            className={`rounded-lg px-4 py-1.5 text-xs font-semibold transition-all duration-200 ${
-              mode === 'cards' ? 'bg-indigo-500/25 text-white shadow-[0_0_12px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:text-white'
-            }`}>
-            🎓 Flashcards
-          </button>
-          <button onClick={() => setMode('quiz')}
-            className={`rounded-lg px-4 py-1.5 text-xs font-semibold transition-all duration-200 ${
-              mode === 'quiz' ? 'bg-indigo-500/25 text-white shadow-[0_0_12px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:text-white'
-            }`}>
-            📝 Quiz
-          </button>
+      <div className="mb-6 flex flex-wrap items-center gap-4">
+        <div className="flex gap-1 rounded-lg border border-white/[0.06] bg-ink-900 p-1">
+          {(
+            [
+              ['cards', 'Flashcards', GraduationCap],
+              ['quiz', 'Quiz', ListChecks],
+            ] as const
+          ).map(([m, label, Icon]) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={cn(
+                'flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors',
+                mode === m ? 'bg-white/[0.08] text-paper-100' : 'text-paper-500 hover:text-paper-300',
+              )}
+            >
+              <Icon size={14} />
+              {label}
+            </button>
+          ))}
         </div>
 
-        <div className="ml-auto flex items-center gap-2 text-xs">
-          <span className="rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-slate-400 backdrop-blur-xl">
-            📚 {stats.total}
+        <div className="ml-auto flex items-center gap-4 text-xs text-paper-500">
+          <span className="flex items-center gap-1.5">
+            <BookOpen size={14} />
+            {stats.total} cards
           </span>
-          <span className="rounded-full border border-amber-500/15 bg-amber-500/5 px-2.5 py-1 text-amber-300 backdrop-blur-xl">
-            ⏰ {stats.due}
+          <span className="flex items-center gap-1.5 text-accent-400">
+            <Clock size={14} />
+            {stats.due} due
           </span>
-          <span className="rounded-full border border-emerald-500/15 bg-emerald-500/5 px-2.5 py-1 text-emerald-300 backdrop-blur-xl">
-            ✓ {stats.mastered}
+          <span className="flex items-center gap-1.5 text-emerald-400">
+            <CheckCircle2 size={14} />
+            {stats.mastered} mastered
           </span>
         </div>
       </div>
 
       {doc.cards.length === 0 ? (
-        <p className={`${GLASS} rounded-2xl p-8 text-center text-sm text-slate-400`}>
-          No cards generated. Try longer text.
+        <p className="rounded-xl border border-white/[0.06] bg-ink-850 p-10 text-center text-sm text-paper-500">
+          No cards could be generated. Try pasting longer, fact-rich paragraphs.
         </p>
       ) : mode === 'cards' ? (
         <Flashcard doc={doc} docs={docs} setDocs={setDocs} profile={profile} setProfile={setProfile} />

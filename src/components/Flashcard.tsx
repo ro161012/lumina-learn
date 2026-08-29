@@ -1,5 +1,6 @@
 import { memo, useMemo, useState } from 'react'
-import { GLASS, HeroSurface } from './Glass'
+import LiquidGlass from 'liquid-glass-react'
+import { Badge } from './ui'
 import { rateCard, type Doc, type Profile } from '../lib/store'
 import { isDue, type Rating } from '../lib/scheduler'
 
@@ -11,12 +12,18 @@ interface Props {
   setProfile: React.Dispatch<React.SetStateAction<Profile>>
 }
 
-const RATINGS: { r: Rating; label: string; cls: string; icon: string }[] = [
-  { r: 0, label: 'Again', cls: 'text-red-300 hover:bg-red-500/15 border-red-500/20', icon: '❌' },
-  { r: 1, label: 'Hard', cls: 'text-amber-300 hover:bg-amber-500/15 border-amber-500/20', icon: '🔥' },
-  { r: 2, label: 'Good', cls: 'text-indigo-300 hover:bg-indigo-500/15 border-indigo-500/20', icon: '👍' },
-  { r: 3, label: 'Easy', cls: 'text-emerald-300 hover:bg-emerald-500/15 border-emerald-500/20', icon: '✨' },
+const RATINGS: { r: Rating; label: string; cls: string }[] = [
+  { r: 0, label: 'Again', cls: 'border-red-500/20 text-red-300 hover:bg-red-500/10' },
+  { r: 1, label: 'Hard', cls: 'border-amber-500/20 text-amber-300 hover:bg-amber-500/10' },
+  { r: 2, label: 'Good', cls: 'border-accent-500/25 text-accent-300 hover:bg-accent-500/10' },
+  { r: 3, label: 'Easy', cls: 'border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/10' },
 ]
+
+const TYPE_LABEL: Record<string, { label: string; tone: 'accent' | 'success' | 'neutral' }> = {
+  definition: { label: 'Definition', tone: 'accent' },
+  cloze: { label: 'Fill the blank', tone: 'neutral' },
+  qa: { label: 'Q & A', tone: 'neutral' },
+}
 
 export default function Flashcard({ doc, docs, setDocs, profile, setProfile }: Props) {
   const [index, setIndex] = useState(0)
@@ -28,11 +35,12 @@ export default function Flashcard({ doc, docs, setDocs, profile, setProfile }: P
   }, [doc.cards])
 
   if (queue.length === 0) {
-    return <p className={`${GLASS} rounded-2xl p-8 text-center text-sm text-slate-400`}>No cards to study.</p>
+    return <p className="rounded-xl border border-white/[0.06] bg-ink-850 p-10 text-center text-sm text-paper-500">No cards to study.</p>
   }
 
   const safeIndex = index % queue.length
   const card = queue[safeIndex]
+  const typeMeta = TYPE_LABEL[card.type] ?? TYPE_LABEL.qa
 
   function rate(r: Rating) {
     const result = rateCard(docs, doc.id, card.id, r, profile)
@@ -46,15 +54,15 @@ export default function Flashcard({ doc, docs, setDocs, profile, setProfile }: P
 
   return (
     <div className="fade-up" key={card.id + '-' + safeIndex}>
-      {/* Progress bar */}
-      <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-white/5">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-400 to-indigo-500 transition-all duration-500"
-          style={{ width: `${progress}%` }}
-        />
+      {/* Progress */}
+      <div className="mb-4 flex items-center gap-3">
+        <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
+          <div className="h-full rounded-full bg-accent-500 transition-all duration-500" style={{ width: `${progress}%` }} />
+        </div>
+        <span className="text-xs tabular-nums text-paper-500">{safeIndex + 1} / {queue.length}</span>
       </div>
 
-      {/* Flashcard — the ONE WebGL surface */}
+      {/* Flashcard — the liquid-glass hero */}
       <div className="flip-scene">
         <div
           className={`flip-inner relative h-80 w-full cursor-pointer select-none ${flipped ? 'flipped' : ''}`}
@@ -62,55 +70,65 @@ export default function Flashcard({ doc, docs, setDocs, profile, setProfile }: P
         >
           {/* Front */}
           <div className="flip-face absolute inset-0">
-            <HeroSurface displacementScale={50} cornerRadius={28} className="h-full rounded-3xl">
-              <div className="flex h-full flex-col rounded-3xl p-8">
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-indigo-500/20 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-indigo-300 border border-indigo-500/20">
-                    {card.type}
-                  </span>
-                  {isDue(card.state) && (
-                    <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-300 border border-amber-500/20">
-                      due
-                    </span>
-                  )}
+            <LiquidGlass
+              displacementScale={42}
+              blurAmount={0.03}
+              saturation={115}
+              aberrationIntensity={0.8}
+              elasticity={0.2}
+              cornerRadius={20}
+              className="h-full rounded-2xl"
+            >
+              <div className="flex h-full flex-col rounded-2xl border border-white/[0.08] bg-ink-850 p-8">
+                <div className="flex items-center justify-between">
+                  <Badge tone={typeMeta.tone}>{typeMeta.label}</Badge>
+                  {isDue(card.state) && <Badge tone="warn">Due now</Badge>}
                 </div>
                 <div className="flex flex-1 items-center justify-center px-4 text-center">
-                  <p className="text-xl leading-relaxed text-white font-medium">{card.question}</p>
+                  <p className="font-display text-2xl font-medium leading-snug tracking-tight text-paper-100">
+                    {card.question}
+                  </p>
                 </div>
-                <p className="text-center text-xs text-slate-400 tracking-wide">tap to reveal</p>
+                <p className="text-center text-xs text-paper-600">Click to reveal</p>
               </div>
-            </HeroSurface>
+            </LiquidGlass>
           </div>
 
           {/* Back */}
           <div className="flip-face flip-back absolute inset-0">
-            <HeroSurface displacementScale={55} cornerRadius={28} className="h-full rounded-3xl">
-              <div className="flex h-full flex-col rounded-3xl p-8">
-                <span className="inline-flex w-fit items-center rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-300 border border-emerald-500/20">
-                  answer
-                </span>
+            <LiquidGlass
+              displacementScale={42}
+              blurAmount={0.03}
+              saturation={115}
+              aberrationIntensity={0.8}
+              elasticity={0.2}
+              cornerRadius={20}
+              className="h-full rounded-2xl"
+            >
+              <div className="flex h-full flex-col rounded-2xl border border-accent-500/[0.14] bg-ink-850 p-8">
+                <Badge tone="success">Answer</Badge>
                 <div className="flex flex-1 items-center justify-center px-4 text-center">
-                  <p className="text-2xl font-bold leading-relaxed text-emerald-300 drop-shadow-lg">{card.answer}</p>
+                  <p className="font-display text-2xl font-semibold leading-snug tracking-tight text-accent-300">
+                    {card.answer}
+                  </p>
                 </div>
-                <p className="text-center text-xs text-slate-400 tracking-wide">how well did you know it?</p>
+                <p className="text-center text-xs text-paper-600">How well did you know it?</p>
               </div>
-            </HeroSurface>
+            </LiquidGlass>
           </div>
         </div>
       </div>
 
-      {/* Rating buttons — CSS only, instant */}
+      {/* Ratings */}
       {flipped && (
-        <div className="fade-up mt-5 grid grid-cols-4 gap-2.5">
-          {RATINGS.map(({ r, label, cls, icon }) => (
+        <div className="fade-up mt-5 grid grid-cols-4 gap-2">
+          {RATINGS.map(({ r, label, cls }) => (
             <button
               key={r}
               onClick={() => rate(r)}
-              className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-3 text-sm font-semibold
-                backdrop-blur-xl transition-all duration-200 active:scale-95 ${cls}`}
+              className={`rounded-lg border bg-ink-850 px-3 py-3 text-sm font-medium transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] ${cls}`}
             >
-              <span>{icon}</span>
-              <span>{label}</span>
+              {label}
             </button>
           ))}
         </div>

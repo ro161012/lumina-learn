@@ -1,15 +1,23 @@
 import { useEffect, useState } from 'react'
+import { GraduationCap, MessageSquare, Layers, BarChart3, FilePlus2 } from 'lucide-react'
 import Sidebar from './components/Sidebar'
 import StudyView from './components/StudyView'
 import AskView from './components/AskView'
 import ConceptsView from './components/ConceptsView'
 import ProgressView from './components/ProgressView'
 import NewDocView from './components/NewDocView'
-import { GLASS } from './components/Glass'
+import { Button, cn } from './components/ui'
 import { loadDocs, persistDocs, loadProfile, persistProfile, type Doc, type Profile } from './lib/store'
 import { preloadModels } from './lib/ai'
 
 export type Tab = 'study' | 'ask' | 'concepts' | 'progress' | 'new'
+
+const TABS: { id: Tab; label: string; icon: typeof GraduationCap }[] = [
+  { id: 'study', label: 'Study', icon: GraduationCap },
+  { id: 'ask', label: 'Ask', icon: MessageSquare },
+  { id: 'concepts', label: 'Concepts', icon: Layers },
+  { id: 'progress', label: 'Progress', icon: BarChart3 },
+]
 
 export default function App() {
   const [docs, setDocs] = useState<Doc[]>(() => loadDocs())
@@ -31,7 +39,7 @@ export default function App() {
   const activeDoc = docs.find((d) => d.id === activeDocId) ?? null
 
   return (
-    <div className="glass-bg-orbs flex h-full">
+    <div className="flex h-full">
       <Sidebar
         docs={docs}
         activeDocId={activeDocId}
@@ -48,7 +56,7 @@ export default function App() {
         aiStatus={aiStatus}
       />
 
-      <main className="flex-1 overflow-y-auto p-6">
+      <main className="flex-1 overflow-y-auto">
         {tab === 'new' && (
           <NewDocView onCreated={(doc) => { setDocs((prev) => [doc, ...prev]); setActiveDocId(doc.id); setTab('study') }} />
         )}
@@ -56,38 +64,37 @@ export default function App() {
         {tab !== 'new' && !activeDoc && <EmptyState onNew={() => setTab('new')} />}
 
         {tab !== 'new' && activeDoc && (
-          <div className="mx-auto max-w-5xl">
-            {/* Doc header */}
-            <header className="mb-6 fade-up">
-              <div className={`${GLASS} rounded-3xl px-7 py-5`}>
-                <h1 className="text-2xl font-bold text-white">{activeDoc.title}</h1>
-                <p className="mt-1 text-sm text-slate-300">
-                  {activeDoc.cards.length} cards · {activeDoc.quiz.length} quiz ·{' '}
-                  {new Date(activeDoc.createdAt).toLocaleDateString()}
-                </p>
-              </div>
+          <div className="mx-auto max-w-4xl px-8 py-8">
+            {/* Header */}
+            <header className="fade-up">
+              <h1 className="font-display text-3xl font-semibold tracking-tight text-paper-100">{activeDoc.title}</h1>
+              <p className="mt-1.5 text-sm text-paper-500">
+                {activeDoc.cards.length} cards · {activeDoc.quiz.length} quiz questions · added{' '}
+                {new Date(activeDoc.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+              </p>
             </header>
 
             {/* Tab bar */}
-            <nav className="mb-6 fade-up" style={{ animationDelay: '0.05s' }}>
-              <div className={`${GLASS} rounded-2xl p-1.5 flex gap-1`}>
-                {(
-                  [['study', '🎓 Study'], ['ask', '💬 Ask'], ['concepts', '🧠 Concepts'], ['progress', '📊 Progress']] as [Tab, string][]
-                ).map(([t, label]) => (
-                  <button key={t} onClick={() => setTab(t)}
-                    className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
-                      tab === t
-                        ? 'bg-indigo-500/25 text-white shadow-[0_0_15px_rgba(99,102,241,0.12)]'
-                        : 'text-slate-400 hover:text-white hover:bg-white/5'
-                    }`}>
-                    {label}
-                  </button>
-                ))}
-              </div>
+            <nav className="fade-up mt-6 flex gap-6 border-b border-white/[0.06]" style={{ animationDelay: '0.04s' }}>
+              {TABS.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setTab(id)}
+                  className={cn(
+                    '-mb-px flex items-center gap-2 border-b-2 px-0.5 pb-3 pt-1 text-sm font-medium transition-colors',
+                    tab === id
+                      ? 'border-accent-500 text-paper-100'
+                      : 'border-transparent text-paper-500 hover:border-white/[0.12] hover:text-paper-300',
+                  )}
+                >
+                  <Icon size={15} strokeWidth={tab === id ? 2.4 : 2} />
+                  {label}
+                </button>
+              ))}
             </nav>
 
             {/* Content */}
-            <div className="fade-up" style={{ animationDelay: '0.1s' }}>
+            <div className="fade-up pt-6" style={{ animationDelay: '0.08s' }}>
               {tab === 'study' && <StudyView doc={activeDoc} docs={docs} setDocs={setDocs} profile={profile} setProfile={setProfile} />}
               {tab === 'ask' && <AskView doc={activeDoc} />}
               {tab === 'concepts' && <ConceptsView doc={activeDoc} />}
@@ -102,17 +109,18 @@ export default function App() {
 
 function EmptyState({ onNew }: { onNew: () => void }) {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center fade-up">
-      <div className="text-7xl" style={{ animation: 'float 6s ease-in-out infinite' }}>✨</div>
-      <h2 className="text-xl font-semibold text-white">No document selected</h2>
-      <p className="max-w-md text-sm text-slate-300">
-        Paste any study material and Lumina will build flashcards, quizzes, and an AI tutor instantly.
-      </p>
-      <button onClick={onNew}
-        className="rounded-xl bg-indigo-500/20 border border-indigo-500/20 px-6 py-3 text-sm font-semibold text-white
-          hover:bg-indigo-500/30 active:scale-[0.98] transition-all duration-200 shadow-[0_0_20px_rgba(99,102,241,0.1)]">
-        + Add your first text
-      </button>
+    <div className="flex h-full flex-col items-center justify-center gap-5 px-8 text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/[0.08] bg-ink-850">
+        <FilePlus2 size={24} className="text-accent-400" />
+      </div>
+      <div>
+        <h2 className="font-display text-xl font-semibold tracking-tight text-paper-100">No study set selected</h2>
+        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-paper-500">
+          Paste lecture notes, a textbook chapter, or an article. Lumina builds flashcards, a quiz, and an AI
+          tutor from your material — all in your browser.
+        </p>
+      </div>
+      <Button variant="primary" onClick={onNew}>Create a study set</Button>
     </div>
   )
 }

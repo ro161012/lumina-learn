@@ -1,5 +1,6 @@
-import { memo, useMemo, useState } from 'react'
-import { GLASS, GLASS_HOVER } from './Glass'
+import { useMemo, useState } from 'react'
+import { Check, X, RotateCcw } from 'lucide-react'
+import { Badge, Button, Card, cn } from './ui'
 import { rateCard, type Doc, type Profile } from '../lib/store'
 import type { Rating } from '../lib/scheduler'
 
@@ -19,38 +20,36 @@ export default function Quiz({ doc, docs, setDocs, profile, setProfile }: Props)
   const items = useMemo(() => doc.quiz, [doc.quiz])
 
   if (items.length === 0) {
-    return <p className={`${GLASS} rounded-2xl p-8 text-center text-sm text-slate-400`}>Not enough material for a quiz.</p>
+    return <p className="rounded-xl border border-white/[0.06] bg-ink-850 p-10 text-center text-sm text-paper-500">Not enough material for a quiz.</p>
   }
 
   if (done) {
     const pct = Math.round((score / items.length) * 100)
+    const verdict = pct >= 80 ? 'Solid command of this material.' : pct >= 50 ? 'Good progress — review the misses and try again.' : 'Worth another pass with the flashcards first.'
     return (
-      <div className={`${GLASS} rounded-3xl p-10 text-center fade-up`}>
-        <div className="text-6xl mb-2" style={{ filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.3))' }}>
-          {pct >= 80 ? '🏆' : pct >= 50 ? '💪' : '📖'}
+      <Card className="fade-up p-10 text-center">
+        <div className="font-display text-5xl font-semibold tracking-tight text-paper-100">
+          {score}<span className="text-2xl text-paper-500"> / {items.length}</span>
         </div>
-        <h2 className="mt-2 text-3xl font-bold text-white">{score} / {items.length}</h2>
-        <p className="mt-3 text-sm text-slate-300">
-          {pct >= 80 ? 'Excellent!' : pct >= 50 ? 'Good progress.' : 'Keep studying.'}
-        </p>
-        <div className="mx-auto mt-6 h-2.5 w-64 overflow-hidden rounded-full bg-white/5">
+        <p className="mt-1 text-sm text-paper-500">{pct}% correct · {verdict}</p>
+        <div className="mx-auto mt-6 h-1.5 w-56 overflow-hidden rounded-full bg-white/[0.06]">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${
-              pct >= 80 ? 'bg-gradient-to-r from-emerald-500 to-emerald-400'
-                : pct >= 50 ? 'bg-gradient-to-r from-amber-500 to-amber-400'
-                : 'bg-gradient-to-r from-red-500 to-red-400'
-            }`}
+            className={cn(
+              'h-full rounded-full transition-all duration-500',
+              pct >= 80 ? 'bg-emerald-500' : pct >= 50 ? 'bg-accent-500' : 'bg-red-500/70',
+            )}
             style={{ width: `${pct}%` }}
           />
         </div>
-        <button
+        <Button
+          variant="primary"
+          className="mt-8"
           onClick={() => { setCurrent(0); setSelected(null); setScore(0); setDone(false) }}
-          className="mt-8 rounded-xl bg-indigo-500/20 border border-indigo-500/20 px-6 py-2.5 text-sm font-semibold text-white
-            hover:bg-indigo-500/30 active:scale-[0.98] transition-all duration-200 shadow-[0_0_20px_rgba(99,102,241,0.1)]"
         >
+          <RotateCcw size={14} />
           Retry quiz
-        </button>
-      </div>
+        </Button>
+      </Card>
     )
   }
 
@@ -69,26 +68,20 @@ export default function Quiz({ doc, docs, setDocs, profile, setProfile }: Props)
     }
   }
 
-  function next() {
-    if (current + 1 >= items.length) setDone(true)
-    else { setCurrent((c) => c + 1); setSelected(null) }
-  }
-
   return (
     <div className="fade-up" key={current}>
       {/* Progress */}
-      <div className="mb-5 flex items-center gap-4">
-        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/5">
-          <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-400 transition-all duration-300"
-            style={{ width: `${(current / items.length) * 100}%` }} />
+      <div className="mb-5 flex items-center gap-3">
+        <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
+          <div className="h-full rounded-full bg-accent-500 transition-all duration-300" style={{ width: `${((current + (selected !== null ? 1 : 0)) / items.length) * 100}%` }} />
         </div>
-        <span className="text-xs font-medium text-slate-300">{current + 1}/{items.length}</span>
+        <span className="text-xs tabular-nums text-paper-500">{current + 1} / {items.length}</span>
       </div>
 
-      <div className={`${GLASS} rounded-3xl p-8`}>
-        <p className="text-lg leading-relaxed text-white font-medium">{item.question}</p>
+      <Card className="p-7">
+        <p className="font-display text-xl font-medium leading-snug tracking-tight text-paper-100">{item.question}</p>
 
-        <div className="mt-6 space-y-2.5">
+        <div className="mt-6 space-y-2">
           {item.options.map((opt, i) => {
             const isCorrect = i === item.correctIndex
             const isPicked = i === selected
@@ -98,21 +91,27 @@ export default function Quiz({ doc, docs, setDocs, profile, setProfile }: Props)
                 key={i}
                 onClick={() => choose(i)}
                 disabled={revealed}
-                className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-left text-sm
-                  backdrop-blur-xl transition-all duration-200 active:scale-[0.99] ${
-                  revealed
-                    ? isCorrect ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-                      : isPicked ? 'border-red-500/40 bg-red-500/10 text-red-300'
-                      : 'border-white/[0.05] bg-white/[0.02] text-slate-500'
-                    : 'border-white/[0.08] bg-white/[0.04] text-slate-200 hover:border-white/[0.15] hover:bg-white/[0.07]'
-                }`}
+                className={cn(
+                  'flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left text-sm transition-colors',
+                  !revealed && 'border-white/[0.08] bg-ink-900 hover:border-white/[0.16] hover:bg-ink-800 cursor-pointer',
+                  revealed && isCorrect && 'border-emerald-500/30 bg-emerald-500/[0.07] text-emerald-200',
+                  revealed && isPicked && !isCorrect && 'border-red-500/30 bg-red-500/[0.07] text-red-300',
+                  revealed && !isCorrect && !isPicked && 'border-white/[0.05] bg-ink-900 text-paper-500',
+                )}
               >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-current text-xs font-bold">
+                <span
+                  className={cn(
+                    'flex h-6 w-6 shrink-0 items-center justify-center rounded-md border text-xs font-semibold',
+                    revealed && isCorrect ? 'border-emerald-500/40 text-emerald-300'
+                      : revealed && isPicked ? 'border-red-500/40 text-red-300'
+                      : 'border-white/[0.12] text-paper-500',
+                  )}
+                >
                   {String.fromCharCode(65 + i)}
                 </span>
                 <span className="flex-1">{opt}</span>
-                {revealed && isCorrect && <span className="text-emerald-400 font-bold">✓</span>}
-                {revealed && isPicked && !isCorrect && <span className="text-red-400 font-bold">✕</span>}
+                {revealed && isCorrect && <Check size={16} className="text-emerald-400" />}
+                {revealed && isPicked && !isCorrect && <X size={16} className="text-red-400" />}
               </button>
             )
           })}
@@ -120,19 +119,15 @@ export default function Quiz({ doc, docs, setDocs, profile, setProfile }: Props)
 
         {selected !== null && (
           <div className="mt-6 flex items-center justify-between">
-            <p className="text-sm text-slate-300">
-              {selected === item.correctIndex ? '🎉 Correct!' : 'Not quite.'}
+            <p className="text-sm text-paper-400">
+              {selected === item.correctIndex ? 'Correct.' : `That's not right — the answer is ${item.options[item.correctIndex]}.`}
             </p>
-            <button
-              onClick={next}
-              className="rounded-xl bg-indigo-500/20 border border-indigo-500/20 px-5 py-2 text-sm font-semibold text-white
-                hover:bg-indigo-500/30 active:scale-[0.98] transition-all duration-200"
-            >
-              {current + 1 >= items.length ? 'Results' : 'Next →'}
-            </button>
+            <Button variant="primary" size="sm" onClick={() => { if (current + 1 >= items.length) setDone(true); else { setCurrent((c) => c + 1); setSelected(null) } }}>
+              {current + 1 >= items.length ? 'See results' : 'Next'}
+            </Button>
           </div>
         )}
-      </div>
+      </Card>
     </div>
   )
 }
