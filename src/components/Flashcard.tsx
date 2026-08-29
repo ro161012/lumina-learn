@@ -12,10 +12,10 @@ interface Props {
 }
 
 const RATINGS: { r: Rating; label: string; cls: string }[] = [
-  { r: 0, label: 'Again', cls: 'border-red-500/20 text-red-300 hover:bg-red-500/10' },
-  { r: 1, label: 'Hard', cls: 'border-amber-500/20 text-amber-300 hover:bg-amber-500/10' },
-  { r: 2, label: 'Good', cls: 'border-accent-500/25 text-accent-300 hover:bg-accent-500/10' },
-  { r: 3, label: 'Easy', cls: 'border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/10' },
+  { r: 0, label: 'Again', cls: 'border-red-500/25 text-red-300 hover:bg-red-500/10' },
+  { r: 1, label: 'Hard', cls: 'border-amber-500/25 text-amber-300 hover:bg-amber-500/10' },
+  { r: 2, label: 'Good', cls: 'border-emerald-500/25 text-emerald-300 hover:bg-emerald-500/10' },
+  { r: 3, label: 'Easy', cls: 'border-cyan-400/25 text-cyan-300 hover:bg-cyan-400/10' },
 ]
 
 const TYPE_LABEL: Record<string, { label: string; tone: 'accent' | 'success' | 'neutral' }> = {
