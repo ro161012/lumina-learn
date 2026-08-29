@@ -1,5 +1,4 @@
 import { memo, useMemo, useState } from 'react'
-import LiquidGlass from 'liquid-glass-react'
 import { Badge } from './ui'
 import { rateCard, type Doc, type Profile } from '../lib/store'
 import { isDue, type Rating } from '../lib/scheduler'
@@ -24,6 +23,13 @@ const TYPE_LABEL: Record<string, { label: string; tone: 'accent' | 'success' | '
   cloze: { label: 'Fill the blank', tone: 'neutral' },
   qa: { label: 'Q & A', tone: 'neutral' },
 }
+
+/** Frosted glass surface — backdrop blur + soft inner light, fully CSS. */
+const GLASS_FACE = `
+  relative flex h-full w-full flex-col overflow-hidden rounded-2xl
+  border border-white/[0.08] bg-ink-850/90 p-8
+  shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_32px_rgba(0,0,0,0.35)]
+`.replace(/\n\s*/g, ' ').trim()
 
 export default function Flashcard({ doc, docs, setDocs, profile, setProfile }: Props) {
   const [index, setIndex] = useState(0)
@@ -53,7 +59,7 @@ export default function Flashcard({ doc, docs, setDocs, profile, setProfile }: P
   const progress = (safeIndex / queue.length) * 100
 
   return (
-    <div className="fade-up" key={card.id + '-' + safeIndex}>
+    <div className="fade-up mx-auto w-full max-w-xl" key={card.id + '-' + safeIndex}>
       {/* Progress */}
       <div className="mb-4 flex items-center gap-3">
         <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
@@ -62,59 +68,42 @@ export default function Flashcard({ doc, docs, setDocs, profile, setProfile }: P
         <span className="text-xs tabular-nums text-paper-500">{safeIndex + 1} / {queue.length}</span>
       </div>
 
-      {/* Flashcard — the liquid-glass hero */}
+      {/* Card */}
       <div className="flip-scene">
         <div
           className={`flip-inner relative h-80 w-full cursor-pointer select-none ${flipped ? 'flipped' : ''}`}
           onClick={() => setFlipped((f) => !f)}
         >
           {/* Front */}
-          <div className="flip-face absolute inset-0">
-            <LiquidGlass
-              displacementScale={42}
-              blurAmount={0.03}
-              saturation={115}
-              aberrationIntensity={0.8}
-              elasticity={0.2}
-              cornerRadius={20}
-              className="h-full rounded-2xl"
-            >
-              <div className="flex h-full flex-col rounded-2xl border border-white/[0.08] bg-ink-850 p-8">
-                <div className="flex items-center justify-between">
-                  <Badge tone={typeMeta.tone}>{typeMeta.label}</Badge>
-                  {isDue(card.state) && <Badge tone="warn">Due now</Badge>}
-                </div>
-                <div className="flex flex-1 items-center justify-center px-4 text-center">
-                  <p className="font-display text-2xl font-medium leading-snug tracking-tight text-paper-100">
-                    {card.question}
-                  </p>
-                </div>
-                <p className="text-center text-xs text-paper-600">Click to reveal</p>
+          <div className={`flip-face ${GLASS_FACE}`}>
+            {/* soft highlight sweep */}
+            <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.07] via-transparent to-transparent" />
+            <div className="relative z-10 flex h-full flex-col">
+              <div className="flex items-center justify-between">
+                <Badge tone={typeMeta.tone}>{typeMeta.label}</Badge>
+                {isDue(card.state) && <Badge tone="warn">Due now</Badge>}
               </div>
-            </LiquidGlass>
+              <div className="flex flex-1 items-center justify-center px-2 text-center">
+                <p className="font-display text-2xl font-medium leading-snug tracking-tight text-paper-100">
+                  {card.question}
+                </p>
+              </div>
+              <p className="text-center text-xs text-paper-600">Click to reveal</p>
+            </div>
           </div>
 
           {/* Back */}
-          <div className="flip-face flip-back absolute inset-0">
-            <LiquidGlass
-              displacementScale={42}
-              blurAmount={0.03}
-              saturation={115}
-              aberrationIntensity={0.8}
-              elasticity={0.2}
-              cornerRadius={20}
-              className="h-full rounded-2xl"
-            >
-              <div className="flex h-full flex-col rounded-2xl border border-accent-500/[0.14] bg-ink-850 p-8">
-                <Badge tone="success">Answer</Badge>
-                <div className="flex flex-1 items-center justify-center px-4 text-center">
-                  <p className="font-display text-2xl font-semibold leading-snug tracking-tight text-accent-300">
-                    {card.answer}
-                  </p>
-                </div>
-                <p className="text-center text-xs text-paper-600">How well did you know it?</p>
+          <div className={`flip-face flip-back ${GLASS_FACE}`}>
+            <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-accent-500/[0.06] via-transparent to-transparent" />
+            <div className="relative z-10 flex h-full flex-col">
+              <Badge tone="success">Answer</Badge>
+              <div className="flex flex-1 items-center justify-center px-2 text-center">
+                <p className="font-display text-2xl font-semibold leading-snug tracking-tight text-accent-300">
+                  {card.answer}
+                </p>
               </div>
-            </LiquidGlass>
+              <p className="text-center text-xs text-paper-600">How well did you know it?</p>
+            </div>
           </div>
         </div>
       </div>
