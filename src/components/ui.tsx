@@ -10,17 +10,37 @@ export function cn(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(' ')
 }
 
-// ─── Logo mark ──────────────────────────────────────────────────────────────
+// ─── Logo mark — a Gargantua-style black hole ───────────────────────────────
 
 export function Logo({ size = 28 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <rect x="1.5" y="1.5" width="21" height="21" rx="5.5" fill="#1b1915" stroke="rgba(255,255,255,0.08)" />
-      <path
-        d="M12 5.5l1.9 4.6 4.6 1.9-4.6 1.9L12 18.5l-1.9-4.6-4.6-1.9 4.6-1.9z"
-        fill="#e9ae44"
+      {/* faint outer glow */}
+      <circle cx="12" cy="12" r="11.2" stroke="rgba(217,154,43,0.22)" strokeWidth="1" />
+      {/* tilted accretion disk */}
+      <ellipse
+        cx="12"
+        cy="12"
+        rx="10.6"
+        ry="4.1"
+        fill="none"
+        stroke="url(#lg-disk)"
+        strokeWidth="1.7"
+        transform="rotate(-24 12 12)"
+        strokeLinecap="round"
       />
-      <path d="M18.5 14.5l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z" fill="#f2c669" opacity="0.85" />
+      {/* photon ring */}
+      <circle cx="12" cy="12" r="6.7" stroke="#f2c669" strokeWidth="1.1" opacity="0.95" />
+      {/* event horizon */}
+      <circle cx="12" cy="12" r="6" fill="#08080a" />
+      <defs>
+        <linearGradient id="lg-disk" x1="0" y1="0" x2="24" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#b57f1f" />
+          <stop offset="0.45" stopColor="#f2c669" />
+          <stop offset="0.8" stopColor="#e9ae44" />
+          <stop offset="1" stopColor="#7a5b1d" />
+        </linearGradient>
+      </defs>
     </svg>
   )
 }
@@ -74,8 +94,8 @@ export function Card({ children, className, onClick }: CardProps) {
   return (
     <div
       className={cn(
-        'rounded-xl border border-white/[0.06] bg-ink-850 shadow-card',
-        onClick && 'cursor-pointer transition-colors hover:border-white/[0.12] hover:bg-ink-800',
+        'glass rounded-xl',
+        onClick && 'glass-hover cursor-pointer',
         className,
       )}
       onClick={onClick}

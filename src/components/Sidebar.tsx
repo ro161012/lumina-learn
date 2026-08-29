@@ -24,7 +24,7 @@ export default function Sidebar({
   aiStatus,
 }: Props) {
   return (
-    <aside className="flex w-72 shrink-0 flex-col border-r border-white/[0.06] bg-ink-900">
+    <aside className="flex w-72 shrink-0 flex-col border-r border-white/[0.06] bg-ink-900/75 backdrop-blur-xl">
       {/* Brand */}
       <div className="flex items-center gap-3 px-5 pb-5 pt-6">
         <Logo />

@@ -39,8 +39,20 @@ export default function App() {
   const activeDoc = docs.find((d) => d.id === activeDocId) ?? null
 
   return (
-    <div className="flex h-full">
-      <Sidebar
+    <div className="relative flex h-full">
+      {/* Deep-space backdrop: starfield + Gargantua black hole */}
+      <div aria-hidden className="fixed inset-0 z-0">
+        <div className="stars" />
+        <div className="blackhole">
+          <div className="blackhole-glow" />
+          <div className="blackhole-disk" />
+          <div className="blackhole-ring" />
+          <div className="blackhole-core" />
+        </div>
+      </div>
+
+      <div className="relative z-10 flex h-full min-w-0 flex-1">
+        <Sidebar
         docs={docs}
         activeDocId={activeDocId}
         onSelectDoc={(id) => { setActiveDocId(id); setTab('study') }}
@@ -57,6 +69,7 @@ export default function App() {
       />
 
       <main className="flex-1 overflow-y-auto">
+
         {tab === 'new' && (
           <NewDocView onCreated={(doc) => { setDocs((prev) => [doc, ...prev]); setActiveDocId(doc.id); setTab('study') }} />
         )}
@@ -103,6 +116,7 @@ export default function App() {
           </div>
         )}
       </main>
+      </div>
     </div>
   )
 }

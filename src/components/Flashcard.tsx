@@ -24,11 +24,13 @@ const TYPE_LABEL: Record<string, { label: string; tone: 'accent' | 'success' | '
   qa: { label: 'Q & A', tone: 'neutral' },
 }
 
-/** Frosted glass surface — backdrop blur + soft inner light, fully CSS. */
+/** Liquid glass surface — backdrop blur + warm inner light, fully CSS. */
 const GLASS_FACE = `
   relative flex h-full w-full flex-col overflow-hidden rounded-2xl
-  border border-white/[0.08] bg-ink-850/90 p-8
-  shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_32px_rgba(0,0,0,0.35)]
+  border border-white/[0.08] p-8
+  shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_0_60px_rgba(217,154,43,0.06),0_8px_32px_rgba(0,0,0,0.4)]
+  bg-gradient-to-b from-[rgba(32,29,24,0.66)] to-[rgba(19,18,15,0.74)]
+  backdrop-blur-2xl
 `.replace(/\n\s*/g, ' ').trim()
 
 export default function Flashcard({ doc, docs, setDocs, profile, setProfile }: Props) {
@@ -76,8 +78,9 @@ export default function Flashcard({ doc, docs, setDocs, profile, setProfile }: P
         >
           {/* Front */}
           <div className={`flip-face ${GLASS_FACE}`}>
-            {/* soft highlight sweep */}
-            <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.07] via-transparent to-transparent" />
+            {/* soft highlight sweep with a hint of accretion glow */}
+            <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.06] via-transparent to-transparent" />
+            <div className="pointer-events-none absolute -top-24 right-0 h-48 w-48 rounded-full bg-accent-500/[0.07] blur-3xl" />
             <div className="relative z-10 flex h-full flex-col">
               <div className="flex items-center justify-between">
                 <Badge tone={typeMeta.tone}>{typeMeta.label}</Badge>
