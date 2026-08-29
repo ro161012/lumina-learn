@@ -13,7 +13,16 @@ body,
 }
 
 body {
-  @apply bg-ink-950 text-slate-200 antialiased;
+  @apply text-slate-200 antialiased;
+  background: linear-gradient(135deg, #0a0f1a 0%, #0d1b2a 25%, #1b1145 50%, #0d1b2a 75%, #0a0f1a 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 20s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 ::selection {
@@ -77,4 +86,76 @@ body {
 }
 .flip-back {
   transform: rotateY(180deg);
+}
+
+/* ── Glass-specific utilities ─────────────────────────────────────────────── */
+
+/* Glass morphism fallback for non-Chrome browsers */
+@supports not (backdrop-filter: url('data:')) {
+  .glass-fallback {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+}
+
+/* Soft inner glow for glass surfaces */
+.glass-glow {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 40px rgba(99, 102, 241, 0.06),
+    0 0 80px rgba(139, 92, 246, 0.04);
+}
+
+/* Glass text highlight on hover */
+.glass-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-hover:hover {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 30px rgba(99, 102, 241, 0.08);
+}
+
+/* Animated gradient orbs behind glass */
+.glass-bg-orbs::before,
+.glass-bg-orbs::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+.glass-bg-orbs::before {
+  width: 600px;
+  height: 600px;
+  top: -100px;
+  left: -100px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%);
+  animation: orbFloat1 25s ease-in-out infinite;
+}
+.glass-bg-orbs::after {
+  width: 500px;
+  height: 500px;
+  bottom: -80px;
+  right: -80px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.25), transparent 70%);
+  animation: orbFloat2 30s ease-in-out infinite;
+}
+@keyframes orbFloat1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(80px, 60px) scale(1.1); }
+  66%      { transform: translate(-40px, 30px) scale(0.95); }
+}
+@keyframes orbFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(-60px, -40px) scale(1.05); }
+  66%      { transform: translate(50px, -20px) scale(0.9); }
+}
+
+/* Ensure glass components sit above orbs */
+#root {
+  position: relative;
+  z-index: 1;
 }
